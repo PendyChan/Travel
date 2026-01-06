@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 西葡非典型深度之旅</title>
+    <title>2026 西葡之旅</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -58,21 +58,6 @@
             color: #e17055;
         }
     </style>
-    <!-- Chosen Palette: Warm Neutrals & Earth Tones (Cream #fdfbf7, Terracotta #e17055, Sand #d4a373, Charcoal #2d3436) -->
-    <!-- Application Structure Plan: 
-         1. Hero Section: Summary of the trip stats and dates.
-         2. Visual Overview: Gantt Chart showing the flow of dates vs cities.
-         3. Dynamic Itinerary Explorer: The core interactive element. Users select a city/leg to see detailed day-by-day plans focusing on "non-touristy" gems.
-         4. Logistics Hub: Dedicated section for the tricky transport legs (Lisbon->Valencia, Madrid->Ronda) with data-driven advice.
-         5. Budget Estimator: Simple visualization of cost distribution. 
-    -->
-    <!-- Visualization & Content Choices:
-         - Timeline: Chart.js Bar Chart (Horizontal) to visualize the duration in each city clearly.
-         - Itinerary: JS-driven DOM manipulation to switch between cities without page reloads.
-         - Logistics: Grid layout with iconography (Unicode) for quick scanning of flight/train times.
-         - Context: Text blocks explaining WHY specific "hidden gems" were chosen over tourist traps.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
 <body class="antialiased">
 
@@ -96,34 +81,33 @@
     <div class="bg-[#faeee7] border-b border-orange-100">
         <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
             <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                西葡深度足球之旅
+                西葡之旅
             </h1>
             <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-600">
-                2026年2月14日 - 2月27日 | 里斯本 • 瓦倫西亞 • 馬德里 • 龍達
+                2026年2月14日 - 2月27日 | 里斯本 • 瓦倫西亞 • 馬德里 • 隆達
             </p>
             <div class="mt-8 flex justify-center gap-4">
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-orange-200">
+                <div class="bg-white p-4 rounded-lg shadow-lg border border-orange-200">
                     <div class="text-3xl font-bold text-[#e17055]">13</div>
-                    <div class="text-sm text-gray-500">天數</div>
+                    <div class="text-lg text-gray-500">天數</div>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-orange-200">
+                <div class="bg-white p-4 rounded-lg shadow-lg border border-orange-200">
                     <div class="text-3xl font-bold text-[#e17055]">4</div>
-                    <div class="text-sm text-gray-500">城市</div>
+                    <div class="text-lg text-gray-500">城市</div>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-orange-200">
+                <div class="bg-white p-4 rounded-lg shadow-lg border border-orange-200">
                     <div class="text-3xl font-bold text-[#e17055]">1</div>
-                    <div class="text-sm text-gray-500">球賽</div>
+                    <div class="text-lg text-gray-500">球賽</div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Overview & Stats -->
-    <section id="overview" class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
+    <section id="overview" class="max-w-7xl mx-auto py-12 px-4 lg:px-6 lg:px-8">
+        <div class="flex justify-center">
             <!-- Timeline Chart -->
-            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 w-full max-w-2xl">
                 <div class="mb-4">
                     <h2 class="text-xl font-bold text-gray-800">行程時間軸</h2>
                     <p class="text-sm text-gray-500">各城市停留時間分佈</p>
@@ -131,28 +115,6 @@
                 <div class="chart-container">
                     <canvas id="timelineChart"></canvas>
                 </div>
-            </div>
-
-            <!-- Trip Philosophy -->
-            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-center">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">行程設計理念</h2>
-                <p class="text-gray-600 mb-4 leading-relaxed">
-                    本行程避開過度商業化的景點，專注於具有歷史深度的角落與當地生活氛圍。
-                </p>
-                <ul class="space-y-3">
-                    <li class="flex items-start">
-                        <span class="text-orange-500 mr-2">✦</span>
-                        <span class="text-gray-700"><strong>里斯本:</strong> 探索 Mouraria 與 Marvila 區，體驗比 Alfama 更原始的葡式生活。</span>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="text-orange-500 mr-2">✦</span>
-                        <span class="text-gray-700"><strong>瓦倫西亞:</strong> 在 Turia 花園騎行，深入 Ruzafa 創意街區，而非僅僅是科學城。</span>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="text-orange-500 mr-2">✦</span>
-                        <span class="text-gray-700"><strong>馬德里 & 龍達:</strong> 體驗西甲球賽狂熱，並挑戰當日來回懸崖之城龍達的壯麗景色。</span>
-                    </li>
-                </ul>
             </div>
         </div>
     </section>
@@ -301,7 +263,7 @@
                     intro: "辛特拉不僅僅是佩納宮。我們要去更神秘的地方。",
                     activities: [
                         { time: "08:30", desc: "搭乘火車前往辛特拉。", highlight: false },
-                        { time: "10:00", desc: "跳過佩納宮(人太多)。首站前往 **Quinta da Regaleira (雷加萊拉莊園)**。這裡有著名的「啟蒙深井」和充滿象徵意義的地下迷宮，氣氛神秘。", highlight: true },
+                        { time: "10:00", desc: "前往 **Quinta da Regaleira (雷加萊拉莊園)**。這裡有著名的「啟蒙深井」和充滿象徵意義的地下迷宮，氣氛神秘。", highlight: true },
                         { time: "13:30", desc: "在辛特拉舊城區午餐，品嚐 Travesseiros 甜點。", highlight: false },
                         { time: "15:00", desc: "前往 **Monserrate Palace (蒙塞拉特宮)**。這是融合了阿拉伯與哥德風格的精緻宮殿，擁有絕美的異國植物園，遊客稀少，極度寧靜。", highlight: true },
                         { time: "19:00", desc: "返回里斯本。", highlight: false }
