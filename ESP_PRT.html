@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 西葡非典型深度之旅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #fdfbf7; /* Warm neutral background */
+            color: #2d3436;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d4a373;
+            border-radius: 4px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* Tab active state */
+        .tab-active {
+            border-bottom: 3px solid #e17055; /* Terracotta */
+            color: #e17055;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            color: #636e72;
+        }
+        .tab-inactive:hover {
+            color: #e17055;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals & Earth Tones (Cream #fdfbf7, Terracotta #e17055, Sand #d4a373, Charcoal #2d3436) -->
+    <!-- Application Structure Plan: 
+         1. Hero Section: Summary of the trip stats and dates.
+         2. Visual Overview: Gantt Chart showing the flow of dates vs cities.
+         3. Dynamic Itinerary Explorer: The core interactive element. Users select a city/leg to see detailed day-by-day plans focusing on "non-touristy" gems.
+         4. Logistics Hub: Dedicated section for the tricky transport legs (Lisbon->Valencia, Madrid->Ronda) with data-driven advice.
+         5. Budget Estimator: Simple visualization of cost distribution. 
+    -->
+    <!-- Visualization & Content Choices:
+         - Timeline: Chart.js Bar Chart (Horizontal) to visualize the duration in each city clearly.
+         - Itinerary: JS-driven DOM manipulation to switch between cities without page reloads.
+         - Logistics: Grid layout with iconography (Unicode) for quick scanning of flight/train times.
+         - Context: Text blocks explaining WHY specific "hidden gems" were chosen over tourist traps.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-gray-800">Iberia<span style="color:#e17055">2026</span></span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="scrollToSection('overview')" class="text-gray-600 hover:text-orange-600 px-3 py-2 text-sm font-medium">總覽</button>
+                    <button onclick="scrollToSection('itinerary')" class="text-gray-600 hover:text-orange-600 px-3 py-2 text-sm font-medium">每日行程</button>
+                    <button onclick="scrollToSection('logistics')" class="text-gray-600 hover:text-orange-600 px-3 py-2 text-sm font-medium">交通細節</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-[#faeee7] border-b border-orange-100">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+                西葡深度足球之旅
+            </h1>
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-600">
+                2026年2月14日 - 2月27日 | 里斯本 • 瓦倫西亞 • 馬德里 • 龍達
+            </p>
+            <div class="mt-8 flex justify-center gap-4">
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-orange-200">
+                    <div class="text-3xl font-bold text-[#e17055]">13</div>
+                    <div class="text-sm text-gray-500">天數</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-orange-200">
+                    <div class="text-3xl font-bold text-[#e17055]">4</div>
+                    <div class="text-sm text-gray-500">城市</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-orange-200">
+                    <div class="text-3xl font-bold text-[#e17055]">1</div>
+                    <div class="text-sm text-gray-500">球賽</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview & Stats -->
+    <section id="overview" class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Timeline Chart -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                <div class="mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">行程時間軸</h2>
+                    <p class="text-sm text-gray-500">各城市停留時間分佈</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Trip Philosophy -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-center">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">行程設計理念</h2>
+                <p class="text-gray-600 mb-4 leading-relaxed">
+                    本行程避開過度商業化的景點，專注於具有歷史深度的角落與當地生活氛圍。
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <span class="text-orange-500 mr-2">✦</span>
+                        <span class="text-gray-700"><strong>里斯本:</strong> 探索 Mouraria 與 Marvila 區，體驗比 Alfama 更原始的葡式生活。</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-orange-500 mr-2">✦</span>
+                        <span class="text-gray-700"><strong>瓦倫西亞:</strong> 在 Turia 花園騎行，深入 Ruzafa 創意街區，而非僅僅是科學城。</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-orange-500 mr-2">✦</span>
+                        <span class="text-gray-700"><strong>馬德里 & 龍達:</strong> 體驗西甲球賽狂熱，並挑戰當日來回懸崖之城龍達的壯麗景色。</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Itinerary -->
+    <section id="itinerary" class="bg-white py-12 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-900">每日詳細行程</h2>
+                <p class="mt-2 text-gray-600">點擊下方城市切換查看深度安排</p>
+            </div>
+
+            <!-- City Tabs -->
+            <div class="flex justify-center space-x-2 md:space-x-8 border-b border-gray-200 mb-8 overflow-x-auto">
+                <button onclick="switchCity('lisbon')" id="tab-lisbon" class="tab-active px-4 py-4 text-sm md:text-lg font-medium focus:outline-none whitespace-nowrap">
+                    里斯本 & 辛特拉 (2/14-18)
+                </button>
+                <button onclick="switchCity('valencia')" id="tab-valencia" class="tab-inactive px-4 py-4 text-sm md:text-lg font-medium focus:outline-none whitespace-nowrap">
+                    瓦倫西亞 (2/18-21)
+                </button>
+                <button onclick="switchCity('madrid')" id="tab-madrid" class="tab-inactive px-4 py-4 text-sm md:text-lg font-medium focus:outline-none whitespace-nowrap">
+                    馬德里 & 龍達 (2/21-27)
+                </button>
+            </div>
+
+            <!-- Dynamic Content Area -->
+            <div id="itinerary-content" class="min-h-[500px]">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Logistics Dashboard -->
+    <section id="logistics" class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 bg-[#fdfbf7]">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">關鍵交通與預算</h2>
+            <p class="mt-2 text-gray-600">跨國移動與長途旅行的重要提示</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Transport Cards -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-orange-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">✈️ 里斯本 (LIS) ➝ 瓦倫西亞 (VLC)</h3>
+                            <p class="text-sm text-gray-500 mt-1">日期: 2月18日 (週三)</p>
+                        </div>
+                        <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">必須提前預訂</span>
+                    </div>
+                    <p class="mt-3 text-gray-700 text-sm">
+                        這是此行最困難的移動。兩地之間沒有直達火車（需經馬德里轉車耗時9小時）。
+                        <br><strong>建議:</strong> 搭乘 TAP Portugal 或 Ryanair 直飛航班（約 1.5 小時）。
+                        <br><em>預算: €50 - €120 (單程含行李)</em>
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">🚅 瓦倫西亞 ➝ 馬德里</h3>
+                            <p class="text-sm text-gray-500 mt-1">日期: 2月21日 (週六)</p>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">AVE / Iryo / Ouigo</span>
+                    </div>
+                    <p class="mt-3 text-gray-700 text-sm">
+                        西班牙高鐵非常發達。車程約 1小時50分。
+                        <br><strong>建議:</strong> 預訂中午左右的班次，抵達馬德里後剛好 Check-in 並為隔天球賽暖身。
+                        <br><em>預算: €20 - €50</em>
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">🚄 馬德里 ⇄ 龍達 (Ronda) 一日遊</h3>
+                            <p class="text-sm text-gray-500 mt-1">日期: 2月23日 (週一)</p>
+                        </div>
+                        <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">高難度預警</span>
+                    </div>
+                    <p class="mt-3 text-gray-700 text-sm">
+                        馬德里距離龍達非常遠。這不是典型的一日遊距離。
+                        <br><strong>交通方案:</strong> 馬德里 Atocha 搭乘高鐵至 <strong>Antequera-Santa Ana</strong> 或 <strong>Córdoba</strong> (約 1.5-2小時)，再轉乘區間火車或巴士至 Ronda (約 1-1.5小時)。單程總耗時約 3.5-4 小時。
+                        <br><strong>建議:</strong> 必須搭乘早上 07:00 的火車，並預計晚上 22:00 回到馬德里。雖然辛苦，但峽谷景色值得。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Budget Chart -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">預算分配估算</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+                <div class="mt-4 text-xs text-gray-500 text-center">
+                    *不含國際機票，以中高舒適度估算
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="mb-2">2026 Spain & Portugal Trip Planner</p>
+            <p class="text-gray-400 text-sm">Designed for Exploration, Not Just Tourism.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Data Layer ---
+        const itineraryData = {
+            lisbon: [
+                {
+                    date: "2/14 (六)",
+                    title: "抵達里斯本",
+                    activities: [
+                        { time: "23:25", desc: "抵達里斯本機場 (LIS)", highlight: true },
+                        { time: "00:30", desc: "搭乘 Bolt/Uber 前往市區飯店 (建議住 Intendente 或 Príncipe Real 區，較有個性)", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/15 (日)",
+                    title: "非典型的里斯本：工業風與舊城區",
+                    intro: "避開遊客爆滿的商業廣場，從當地人的視角看里斯本。",
+                    activities: [
+                        { time: "10:00", desc: "早餐後前往 **LX Factory**。這是由廢棄紡織廠改建的文創園區，充滿街頭塗鴉、設計小店和全世界最美的書店之一 Ler Devagar。", highlight: true },
+                        { time: "14:00", desc: "前往貝倫區，但跳過修道院排隊。改去 **MAAT (藝術建築與科技博物館)**，欣賞其流線型建築並在河岸散步。", highlight: false },
+                        { time: "18:00", desc: "晚餐建議在 **Time Out Market** 附近的 Cais do Sodré 區域找尋海鮮罐頭主題餐廳。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/16 (一)",
+                    title: "歷史與視野：Mouraria 區",
+                    intro: "Alfama 區遊客太多，Mouraria 才是 Fado 音樂真正的發源地，更具庶民氣息。",
+                    activities: [
+                        { time: "09:30", desc: "漫步 **Mouraria** 區，這裡曾經是摩爾人居住地，巷弄比 Alfama 更曲折。", highlight: true },
+                        { time: "11:30", desc: "登上 **Miradouro da Senhora do Monte** (山頂聖母觀景台)。這是市內最高的觀景台，視野比聖露西亞更壯觀，且多為年輕人聚集。", highlight: true },
+                        { time: "15:00", desc: "下午前往 **Marvila** 區 (東邊)，這裡是精釀啤酒與藝術畫廊的新興聚落，完全沒有觀光團。", highlight: false },
+                        { time: "20:00", desc: "在小酒館聆聽一場非商業化的 Fado 演出。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/17 (二)",
+                    title: "辛特拉 (Sintra) 神秘一日遊",
+                    intro: "辛特拉不僅僅是佩納宮。我們要去更神秘的地方。",
+                    activities: [
+                        { time: "08:30", desc: "搭乘火車前往辛特拉。", highlight: false },
+                        { time: "10:00", desc: "跳過佩納宮(人太多)。首站前往 **Quinta da Regaleira (雷加萊拉莊園)**。這裡有著名的「啟蒙深井」和充滿象徵意義的地下迷宮，氣氛神秘。", highlight: true },
+                        { time: "13:30", desc: "在辛特拉舊城區午餐，品嚐 Travesseiros 甜點。", highlight: false },
+                        { time: "15:00", desc: "前往 **Monserrate Palace (蒙塞拉特宮)**。這是融合了阿拉伯與哥德風格的精緻宮殿，擁有絕美的異國植物園，遊客稀少，極度寧靜。", highlight: true },
+                        { time: "19:00", desc: "返回里斯本。", highlight: false }
+                    ]
+                }
+            ],
+            valencia: [
+                {
+                    date: "2/18 (三)",
+                    title: "飛向地中海：瓦倫西亞",
+                    intro: "從大西洋岸飛往地中海，感受截然不同的陽光與現代感。",
+                    activities: [
+                        { time: "上午", desc: "搭乘飛機前往瓦倫西亞 (VLC)。", highlight: true },
+                        { time: "14:00", desc: "入住 **Ruzafa** 區。這裡是瓦倫西亞的 Hipster 區，充滿復古店、咖啡廳和藝廊。", highlight: false },
+                        { time: "16:30", desc: "租借自行車，沿著 **Turia Gardens (圖里亞花園)** 騎行。這是由乾涸河床改建的帶狀公園，穿越整個城市，非常舒適。", highlight: true },
+                        { time: "19:00", desc: "在 **Mercado de Colón** (哥倫布市場) 享用 Tapas 晚餐。這裡建築華麗，比中央市場更適合夜間聚餐。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/19 (四)",
+                    title: "未來與傳統",
+                    intro: "瓦倫西亞是西班牙海鮮燉飯(Paella)的發源地。",
+                    activities: [
+                        { time: "10:00", desc: "參觀 **藝術科學城 (City of Arts and Sciences)**。即使不進去水族館，光是建築本身（Calatrava 設計）就值得花半天拍照。", highlight: true },
+                        { time: "13:30", desc: "前往海邊的 **Malvarrosa** 海灘，在老字號餐廳享用正宗的 **Paella Valenciana** (注意：正宗的是加兔肉與雞肉，不是海鮮)。", highlight: true },
+                        { time: "16:00", desc: "漫步 **El Carmen** 舊城區，尋找著名的街頭塗鴉藝術。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/20 (五)",
+                    title: "自然秘境 Albufera",
+                    intro: "稍微遠離市區，享受寧靜的日落。",
+                    activities: [
+                        { time: "10:00", desc: "前往 **絲綢交易所 (La Lonja de la Seda)**，哥德式建築的傑作 (UNESCO 世界遺產)。", highlight: false },
+                        { time: "15:00", desc: "搭乘公車前往 **Albufera Natural Park**。", highlight: true },
+                        { time: "17:00", desc: "搭乘傳統木船遊湖，這裡是西班牙觀賞日落最美的地方之一。感受「水稻田」與平靜湖面的倒影。", highlight: true },
+                        { time: "20:30", desc: "回到市區，享受瓦倫西亞的夜生活。", highlight: false }
+                    ]
+                }
+            ],
+            madrid: [
+                {
+                    date: "2/21 (六)",
+                    title: "前進馬德里",
+                    activities: [
+                        { time: "11:00", desc: "搭乘高鐵 (AVE/Ouigo) 前往馬德里 (約 1h 50m)。", highlight: true },
+                        { time: "14:00", desc: "抵達馬德里。建議住宿：Atocha 車站附近 (交通方便) 或 La Latina 區 (氣氛好)。", highlight: false },
+                        { time: "16:00", desc: "參觀 **Reina Sofía Museum (索菲亞王后藝術中心)**，必看畢卡索的《格爾尼卡》。週末傍晚有時免費入場。", highlight: true },
+                        { time: "20:00", desc: "在 Cava Baja 街享用晚餐，這裡有馬德里最密集的 Tapas 酒吧。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/22 (日)",
+                    title: "⚽ 比賽日 Match Day",
+                    intro: "今日重心全在球賽。西甲的氣氛在開賽前兩小時就開始了。",
+                    activities: [
+                        { time: "上午", desc: "輕鬆行程。前往 **El Rastro 跳蚤市場** (僅週日開放)。體驗當地人淘寶的樂趣。", highlight: true },
+                        { time: "14:00", desc: "午休 (Siesta)。為了晚上的球賽儲備體力。", highlight: false },
+                        { time: "17:00", desc: "前往球場周邊。無論是伯納烏還是大都會球場，賽前球迷會在周邊酒吧聚集唱歌。", highlight: true },
+                        { time: "TBD", desc: "**觀看球賽**。享受世界頂級足球盛宴。", highlight: true }
+                    ]
+                },
+                {
+                    date: "2/23 (一)",
+                    title: "懸崖之城：龍達 (Ronda) 遠征",
+                    intro: "這是一趟長途跋涉，但為了那座橫跨峽谷的新橋 (Puente Nuevo)，值得。",
+                    activities: [
+                        { time: "07:00", desc: "搭乘早班火車經 Cordoba/Antequera 轉車前往 Ronda。", highlight: true },
+                        { time: "11:30", desc: "抵達 Ronda。直奔 **Puente Nuevo (新橋)**。走下峽谷的小徑 (Camino to the viewpoint) 拍攝橋的全景。", highlight: true },
+                        { time: "13:30", desc: "參觀西班牙最古老的鬥牛場 Plaza de Toros。", highlight: false },
+                        { time: "15:00", desc: "在峽谷邊的咖啡廳休息。", highlight: false },
+                        { time: "17:30", desc: "搭乘火車/巴士返回馬德里。", highlight: false },
+                        { time: "21:30", desc: "抵達馬德里，疲憊但滿足。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/24 (二)",
+                    title: "馬德里冷門美學",
+                    intro: "避開皇宮，去一些在地人喜愛的文化據點。",
+                    activities: [
+                        { time: "10:00", desc: "前往 **Matadero Madrid**。這是由屠宰場改建的當代藝術中心，建築風格獨特，展覽前衛。", highlight: true },
+                        { time: "13:00", desc: "沿著 Manzanares 河岸散步。", highlight: false },
+                        { time: "16:00", desc: "參觀 **Sorolla Museum**。這是畫家 Sorolla 的故居，擁有美麗的安達魯西亞式庭院，光影極美，非常寧靜。", highlight: true },
+                        { time: "19:00", desc: "前往 **Temple of Debod (德波神廟)** 看日落。這是貨真價實的埃及古蹟，也是馬德里看夕陽最好的地方。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/25 (三)",
+                    title: "最後的漫步與告別",
+                    activities: [
+                        { time: "10:00", desc: "漫步 **Barrio de las Letras (文學區)**。這裡是塞萬提斯曾居住的地方，地板上刻有詩句。", highlight: true },
+                        { time: "14:00", desc: "最後的採購 (橄欖油、伊比利火腿真空包)。", highlight: false },
+                        { time: "18:00", desc: "找一家傳統的 Chocolatería 吃吉拿棒 (Churros) 配熱巧克力。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/26 (四)",
+                    title: "返回里斯本",
+                    activities: [
+                        { time: "上午", desc: "整理行李。", highlight: false },
+                        { time: "下午", desc: "前往馬德里機場 (MAD)。搭乘飛機返回里斯本 (LIS)。", highlight: true },
+                        { time: "19:00", desc: "抵達里斯本。入住機場附近的飯店 (如 Meliá, Star Inn)，方便隔天早班機。", highlight: true },
+                        { time: "20:00", desc: "最後晚餐。", highlight: false }
+                    ]
+                },
+                {
+                    date: "2/27 (五)",
+                    title: "返程",
+                    activities: [
+                        { time: "05:55", desc: "里斯本機場起飛。帶著滿滿回憶回家。", highlight: true }
+                    ]
+                }
+            ]
+        };
+
+        // --- Logic Layer ---
+
+        // 1. Initialize Charts
+        function initCharts() {
+            // Timeline Chart
+            const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+            new Chart(ctxTimeline, {
+                type: 'bar',
+                data: {
+                    labels: ['里斯本 (首)', '瓦倫西亞', '馬德里', '里斯本 (末)'],
+                    datasets: [{
+                        label: '天數',
+                        data: [ [14, 18], [18, 21], [21, 26], [26, 27] ], // Simplified date ranges
+                        backgroundColor: [
+                            'rgba(225, 112, 85, 0.8)', // Terracotta
+                            'rgba(253, 203, 110, 0.8)', // Mustard
+                            'rgba(116, 185, 255, 0.8)', // Blue
+                            'rgba(225, 112, 85, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(225, 112, 85, 1)',
+                            'rgba(253, 203, 110, 1)',
+                            'rgba(116, 185, 255, 1)',
+                            'rgba(225, 112, 85, 1)'
+                        ],
+                        borderWidth: 1,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const raw = context.raw;
+                                    return `2月${raw[0]}日 - 2月${raw[1]}日`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            min: 14,
+                            max: 27,
+                            title: { display: true, text: '2026年 2月日期' },
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+
+            // Budget Chart
+            const ctxBudget = document.getElementById('budgetChart').getContext('2d');
+            new Chart(ctxBudget, {
+                type: 'doughnut',
+                data: {
+                    labels: ['住宿', '城際交通', '餐飲', '門票/球賽', '購物/雜支'],
+                    datasets: [{
+                        data: [40, 20, 20, 10, 10],
+                        backgroundColor: [
+                            '#d4a373', // Sand
+                            '#e17055', // Terracotta
+                            '#fab1a0', // Light Orange
+                            '#74b9ff', // Blue (Football)
+                            '#b2bec3'  // Grey
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        // 2. City Switching Logic
+        function switchCity(cityKey) {
+            // Update Tabs
+            document.querySelectorAll('button[id^="tab-"]').forEach(btn => {
+                btn.className = "tab-inactive px-4 py-4 text-sm md:text-lg font-medium focus:outline-none whitespace-nowrap";
+            });
+            document.getElementById(`tab-${cityKey}`).className = "tab-active px-4 py-4 text-sm md:text-lg font-medium focus:outline-none whitespace-nowrap";
+
+            // Render Content
+            const container = document.getElementById('itinerary-content');
+            container.innerHTML = ''; // Clear
+
+            const days = itineraryData[cityKey];
+            
+            // Create Grid
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+
+            days.forEach(day => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-lg shadow border border-gray-100 p-6 card-hover flex flex-col h-full";
+                
+                // Card Header
+                let headerHTML = `
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
+                        <span class="text-orange-600 font-bold">${day.date}</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${day.title}</h3>
+                `;
+                
+                if (day.intro) {
+                    headerHTML += `<p class="text-sm text-gray-500 mb-4 italic">${day.intro}</p>`;
+                }
+
+                // Activities List
+                let listHTML = `<ul class="space-y-4 flex-grow">`;
+                day.activities.forEach(act => {
+                    const highlightClass = act.highlight ? "text-gray-900 font-medium" : "text-gray-500";
+                    const icon = act.highlight ? "🔹" : "▫️";
+                    listHTML += `
+                        <li class="flex items-start text-sm">
+                            <span class="mr-2 mt-0.5 text-xs">${icon}</span>
+                            <div>
+                                <span class="block text-xs text-gray-400 font-mono">${act.time}</span>
+                                <span class="${highlightClass}">${parseMarkdown(act.desc)}</span>
+                            </div>
+                        </li>
+                    `;
+                });
+                listHTML += `</ul>`;
+
+                card.innerHTML = headerHTML + listHTML;
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        // Helper to bold text like markdown
+        function parseMarkdown(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
+        // Scroll Helper
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            switchCity('lisbon'); // Default view
+        });
+
+    </script>
+</body>
+</html>
